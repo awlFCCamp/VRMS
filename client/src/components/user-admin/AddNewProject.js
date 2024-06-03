@@ -1,12 +1,19 @@
 import React, { useState } from 'react';
-import '../../sass/UserAdmin.scss';
 import { Redirect } from 'react-router-dom';
+import {
+  TextField,
+  Button,
+  Typography,
+  Box,
+  Alert,
+  Container,
+} from '@mui/material';
 
 const AddNewProject = ({
   projects,
   onBackClick,
   handleNewProjectFormSubmit,
-  newlyCreatedProject
+  newlyCreatedProject,
 }) => {
   // initialize state hooks
   const [newProjectName, setNewProjectName] = useState(''); // manage input state
@@ -19,7 +26,7 @@ const AddNewProject = ({
   };
 
   if (newlyCreatedProject !== null) {
-    return <Redirect to={`/project/${newlyCreatedProject}`} />
+    return <Redirect to={`/project/${newlyCreatedProject}`} />;
   }
 
   // Handle Form Submit
@@ -56,35 +63,45 @@ const AddNewProject = ({
       setAddProjectSuccess(`The project "${newProjectName}" has been added!`);
     }
   };
-  
+
   return (
-    <div className="add-new-project">
-      <h3>Add New Project</h3>
-      <div>
-        <form onSubmit={handleProjectFormSubmit}>
-          <div className="input-group">
-            <input
-              type="text"
-              placeholder="Project Name"
-              value={newProjectName}
-              onChange={handleNameChange}
-              />
-            <span className="validation-error">{validationError}</span>
-            <span className="project-success">{addProjectSuccess}</span>
-              { newlyCreatedProject && <div>{newlyCreatedProject}</div>}
-          </div>
-          <br />
-          <button className="button-add" type="submit">
+    <Container maxWidth="sm">
+      <Box component="div" className="add-new-project" sx={{ mt: 4 }}>
+        <Typography variant="h4" gutterBottom>
+          Add New Project
+        </Typography>
+        <Box component="form" onSubmit={handleProjectFormSubmit}>
+          <TextField
+            fullWidth
+            variant="outlined"
+            label="Project Name"
+            value={newProjectName}
+            onChange={handleNameChange}
+            margin="normal"
+          />
+          {validationError && <Alert severity="error">{validationError}</Alert>}
+          {addProjectSuccess && (
+            <Alert severity="success">{addProjectSuccess}</Alert>
+          )}
+          <Button
+            variant="contained"
+            color="primary"
+            type="submit"
+            sx={{ mt: 2 }}
+          >
             Add Project
-          </button>
-        </form>
-      </div>
-      <div>
-        <button type="button" className="button-back" onClick={onBackClick}>
+          </Button>
+        </Box>
+        <Button
+          variant="outlined"
+          color="secondary"
+          onClick={onBackClick}
+          sx={{ mt: 2 }}
+        >
           Admin Dashboard
-        </button>
-      </div>
-    </div>
+        </Button>
+      </Box>
+    </Container>
   );
 }; // End AddNewProject
 
