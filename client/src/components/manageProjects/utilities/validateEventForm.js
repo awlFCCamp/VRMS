@@ -1,4 +1,3 @@
-import validator from 'validator';
 import { isWordInArrayInString } from './../../../utils/stringUtils.js';
 
 const validateEventForm = (vals, projectToEdit) => {
@@ -10,10 +9,7 @@ const validateEventForm = (vals, projectToEdit) => {
         if (!vals[key]) {
           newErrors = { ...newErrors, name: 'Event name is required' };
         } else if (
-          isWordInArrayInString(
-            ['meeting', 'mtg'],
-            vals[key].toLowerCase()
-          )
+          isWordInArrayInString(['meeting', 'mtg'], vals[key].toLowerCase())
         ) {
           newErrors = {
             ...newErrors,
@@ -61,6 +57,9 @@ const validateEventForm = (vals, projectToEdit) => {
 
 export default validateEventForm;
 
-function validateLink(str) {
-  return validator.isURL(str);
+function validateLink(url) {
+  const ZoomMeetRegex =
+    /^https:\/\/(www\.)?zoom\.us\/j\/[0-9]+(\?pwd=[a-zA-Z0-9]+)?$/;
+  const GoogleMeetRegex = /^https:\/\/meet\.google\.com\/[a-zA-Z0-9-]+$/;
+  return ZoomMeetRegex.test(url) || GoogleMeetRegex.test(url);
 }

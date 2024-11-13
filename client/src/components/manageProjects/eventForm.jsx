@@ -1,16 +1,24 @@
 import React from 'react';
 import { createClockHours } from '../../utils/createClockHours';
+import validateEventForm from './utilities/validateEventForm';
 import '../../sass/ManageProjects.scss';
 
 const EventForm = ({
   title,
   formValues,
   formErrors,
+  setFormErrors,
   handleInputChange,
   children,
 }) => {
   // This creates the clock hours for the form
   const clockHours = createClockHours();
+  const handleInputChangeWithValidation = (e) => {
+    const { name, value } = e.target;
+    handleInputChange(e);
+    const errors = validateEventForm({ ...formValues, [name]: value });
+    setFormErrors(errors || {});
+  };
   return (
     <div className="event-form-box">
       {title && <h3 className="event-form-title">{title}</h3>}
@@ -24,9 +32,9 @@ const EventForm = ({
           onChange={handleInputChange}
           maxLength={30}
         />
-        {formErrors?.name &&
+        {formErrors?.name && (
           <div className="event-form-error">{formErrors.name}</div>
-        }
+        )}
       </label>
       <div className="event-form-row">
         <label className="event-form-label" htmlFor="eventType">
@@ -114,13 +122,13 @@ const EventForm = ({
           placeholder="Enter meeting url..."
           name="videoConferenceLink"
           value={formValues.videoConferenceLink}
-          onChange={handleInputChange}
+          onChange={handleInputChangeWithValidation}
         />
-        {formErrors?.videoConferenceLink &&
+        {formErrors?.videoConferenceLink && (
           <div className="event-form-error">
             {formErrors.videoConferenceLink}
           </div>
-        }
+        )}
       </label>
 
       {children}
