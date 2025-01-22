@@ -7,8 +7,6 @@ module.exports = (cron, fetch) => {
    * for it. If not, create one.
    */
 
-  const EVENTS = [];
-  const RECURRING_EVENTS = [];
   const URL =
     process.env.NODE_ENV === 'prod'
       ? 'https://www.vrms.io'
@@ -62,8 +60,8 @@ module.exports = (cron, fetch) => {
    * @param {Date} today - Today's date in UTC.
    * @returns {boolean} - True if the event exists, false otherwise.
    */
-  const doesEventExist = (eventName, today) => {
-    return EVENTS.some((event) => {
+  const doesEventExist = (eventName, today, events) => {
+    return events.some((event) => {
       const eventDate = new Date(event.date);
       return isSameUTCDate(eventDate, today) && event.name === eventName;
     });
@@ -99,13 +97,13 @@ module.exports = (cron, fetch) => {
    * Input: None
    * Output: Creates new events by calling the `createEvent` method.
    */
-  const filterAndCreateEvents = async () => {
-    const today = new Date(); // UTC date
+  const filterAndCreateEvents = async (events, recurringEvents) => {
+    const today = new Date();
     const todayDay = today.getUTCDay();
 
-    const eventsToCreate = RECURRING_EVENTS.filter((event) => {
+    const eventsToCreate = recurringEvents.filter((event) => {
       const eventDate = new Date(event.date);
-      return eventDate.getUTCDay() === todayDay && !doesEventExist(event.name, today);
+      return eventDate.getUTCDay() === todayDay && !doesEventExist(event.name, today, events);
     });
 
     for (const event of eventsToCreate) {
@@ -121,8 +119,11 @@ module.exports = (cron, fetch) => {
    */
   const runTask = async () => {
     console.log("Creating today's events...");
-    await fetchAllData();
-    await filterAndCreateEvents();
+    const [events, recurringEvents] = await Promise.all([
+      fetchData('/api/events/'),
+      fetchData('/api/recurringevents/'),
+    ]);
+    await filterAndCreateEvents(events, recurringEvents);
     console.log("Today's events have been created.");
   };
 
