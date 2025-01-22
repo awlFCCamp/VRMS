@@ -13,8 +13,7 @@ const upcomingEvent = (props) => {
                 <Typography className="event-name">{props.nextEvent[0].name}</Typography>
                 <Box className="event-info-wrapper">
                     <ClockIcon />
-                    &nbsp;
-                    <Typography className="event-info">
+                    <Typography className="event-info" sx={{ margin: '0px 0px 0px 12px' }}>
                         {moment(props.nextEvent[0].date).format(
                             "ddd, MMM D @ h:mm a"
                         )}
@@ -23,8 +22,7 @@ const upcomingEvent = (props) => {
                 {props.nextEvent[0].location.city !== "" &&
                     <Box className="event-info-wrapper">
                         <LocationIcon />
-                        &nbsp;
-                        <Typography className="event-info">
+                        <Typography className="event-info" sx={{ margin: '0px 0px 0px 12px' }}>
                             {props.nextEvent[0].location.city},{" "}
                             {props.nextEvent[0].location.state}
                         </Typography>
