@@ -1,5 +1,6 @@
 import React from 'react';
 import { createClockHours } from '../../utils/createClockHours';
+import { TextField } from '@mui/material';
 import '../../sass/ManageProjects.scss';
 
 const EventForm = ({
@@ -14,20 +15,36 @@ const EventForm = ({
   return (
     <div className="event-form-box">
       {title && <h3 className="event-form-title">{title}</h3>}
-      <label className="event-form-label" htmlFor="name">
-        Event Name:
-        <input
-          id="name"
-          placeholder="Meeting name..."
-          name="name"
-          value={formValues.name}
-          onChange={handleInputChange}
-          maxLength={30}
-        />
-        {formErrors?.name &&
-          <div className="event-form-error">{formErrors.name}</div>
-        }
-      </label>
+
+      <TextField
+        required
+        variant="standard"
+        autoComplete="off"
+        helperText={formErrors?.name ? formErrors?.name : ''}
+        error={formErrors?.name}
+        id="name"
+        label="Event Name:"
+        placeholder="Meeting name..."
+        /**
+         * Global styles are overriding Material UI components and leading to odd padding and widths
+         * Resetting styles on component is not a good workaround because it resets MUI CSS
+         * Need to refactor to reusable input component so customized MUI component lives in one place
+         * Need to refactor global css to apply only for the components it's meant for
+         */
+
+        // Negate Global style for event-form-box until all components are refactored
+        // InputProps={{
+        //   inputProps: {
+        //     style: {
+        //       all: 'unset', // Unsets custom/global styles
+        //     },
+        //   },
+        // }}
+        sx={{
+          label: { fontFamily: 'aliseoregular', fontSize: '1rem' },
+        }}
+      />
+
       <div className="event-form-row">
         <label className="event-form-label" htmlFor="eventType">
           Event Type:
@@ -116,11 +133,11 @@ const EventForm = ({
           value={formValues.videoConferenceLink}
           onChange={handleInputChange}
         />
-        {formErrors?.videoConferenceLink &&
+        {formErrors?.videoConferenceLink && (
           <div className="event-form-error">
             {formErrors.videoConferenceLink}
           </div>
-        }
+        )}
       </label>
 
       {children}
