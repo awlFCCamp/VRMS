@@ -59,7 +59,8 @@ export default validateEventForm;
 
 function validateLink(url) {
   const ZoomMeetRegex =
-    /^https:\/\/(www\.)?zoom\.us\/j\/[0-9]+(\?pwd=[a-zA-Z0-9]+)?$/;
-  const GoogleMeetRegex = /^https:\/\/meet\.google\.com\/[a-zA-Z0-9-]+$/;
+    /^(?:https:\/\/)?(?:www\.)?(?:[a-z0-9-]+\.)?zoom\.us\/j\/[0-9]+(\?pwd=[a-zA-Z0-9]+)?$/;
+  const GoogleMeetRegex =
+    /^(?:https:\/\/)?(?:[a-z0-9-]+\.)?meet\.google\.com\/[a-zA-Z0-9-]+$/;
   return ZoomMeetRegex.test(url) || GoogleMeetRegex.test(url);
 }
