@@ -107,7 +107,6 @@ const Auth = () => {
     <div className="flex-container">
       <div className="adminlogin-container">
         <div className="adminlogin-headers">
-          <h3>hello</h3>
         <Typography variant="h3" sx={{fontSize:'2.8em'}}>Welcome Back!</Typography>
         </div>
         <FormControl
