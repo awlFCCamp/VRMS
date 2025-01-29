@@ -5,7 +5,7 @@ import { findNextOccuranceOfDay } from './utilities/findNextDayOccuranceOfDay';
 import { addDurationToTime } from './utilities/addDurationToTime';
 import { timeConvertFromForm } from './utilities/timeConvertFromForm';
 import validateEventForm from './utilities/validateEventForm';
-import EventForm from './eventForm';
+import EventForm from './eventForm/eventForm';
 
 const CreateNewEvent = ({
   projectToEdit,
@@ -30,6 +30,7 @@ const CreateNewEvent = ({
   // Handle form input changes
   const handleInputChange = (event) => {
     setFormValues({ ...formValues, [event.target.name]: event.target.value });
+    console.log(event.target.value);
   };
 
   const handleEventCreate = () => {

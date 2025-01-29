@@ -62,34 +62,37 @@ label {
     font-weight: bold;
 }
 
-input[type=text], input[type=email] {
-    -webkit-appearance: none;
-    max-width: 310px;
-    width: 310px;
-    height: 36px;
-    outline: none;
-    background-color: inherit;
-    border-top: none;
-    border-right: none;
-    border-bottom: 3px solid black;
-    border-left: none;
-    border-radius: 2px;
-    font-size: 24px;
-    padding: 0 4px;
-    margin: 4px 0px;
-    color: rgb(250, 17, 79);
-    font-weight: bold;
-    transition: all .3s ease-in-out;
+// Following styles apply to all text fields including Material UI component <TextField>
+// Global styles help with UI consistency but can lead to style conflicts
 
-    &::placeholder {
-        color: rgb(250, 17, 79);
-        font-weight: 200;
-    }
+// input[type=text], input[type=email] {
+//     -webkit-appearance: none;
+//     max-width: 310px;
+//     width: 310px;
+//     height: 36px;
+//     outline: none;
+//     background-color: inherit;
+//     border-top: none;
+//     border-right: none;
+//     border-bottom: 3px solid black;
+//     border-left: none;
+//     border-radius: 2px;
+//     font-size: 24px;
+//     padding: 0 4px;
+//     margin: 4px 0px;
+//     color: rgb(250, 17, 79);
+//     font-weight: bold;
+//     transition: all .3s ease-in-out;
 
-    &:focus {
-        border-color: rgb(250, 17, 79);
-    }
-}
+//     &::placeholder {
+//         color: rgb(250, 17, 79);
+//         font-weight: 200;
+//     }
+
+//     &:focus {
+//         border-color: rgb(250, 17, 79);
+//     }
+// }
 
 input[type=radio] {
     transform: scale(1.8);
