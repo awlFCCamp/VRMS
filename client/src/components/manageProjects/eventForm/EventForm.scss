@@ -8,6 +8,13 @@
   flex-direction: column;
   gap: 20px;
   background-color: white;
+
+  // Resets the label text size
+  // A global variable was interacting with MUI styles and overflowing the label
+  .MuiInputLabel-root {
+    font-size: inherit;
+  }
+
 }
 
 .event-form-title {
@@ -24,4 +31,3 @@
   color: red;
   margin-bottom: 10px;
 }
-
