@@ -48,6 +48,7 @@ const EditableMeeting = ({
       handleInputChange={handleInputChange}
       formValues={formValues}
       formErrors={formErrors}
+      title="Edit Recurring Event"
     >
       <div>
         <button

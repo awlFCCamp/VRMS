@@ -19,10 +19,11 @@ const CreateNewEvent = ({
     eventType: 'Team Meeting',
     description: '',
     videoConferenceLink: '',
-    day: '0',
+    day: new Date().getDay().toString(), // sets initial date value to user's current day in their local time
     startTime: '7:00pm',
     duration: '1',
   };
+
   const [formValues, setFormValues] = useState(initialFormValues);
   const [formErrors, setFormErrors] = useState({});
   const { showSnackbar } = useSnackbar();
@@ -30,7 +31,6 @@ const CreateNewEvent = ({
   // Handle form input changes
   const handleInputChange = (event) => {
     setFormValues({ ...formValues, [event.target.name]: event.target.value });
-    console.log(event.target.value);
   };
 
   const handleEventCreate = () => {
@@ -83,6 +83,7 @@ const CreateNewEvent = ({
     }
     setFormErrors(errors);
   };
+
   return (
     <div>
       <button

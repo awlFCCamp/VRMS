@@ -4,9 +4,11 @@ import {
   TextField,
   MenuItem,
   Select,
-  InputLabel,
   FormControl,
   Box,
+  Input,
+  InputLabel,
+  FormHelperText,
 } from '@mui/material';
 import './EventForm.scss';
 
@@ -23,14 +25,19 @@ const EventForm = ({
   return (
     <div className="event-form-box">
       {title && <h3 className="event-form-title">{title}</h3>}
-      <TextField
-        required
-        helperText={formErrors?.name ? formErrors?.name : ''}
-        error={formErrors?.name}
-        id="name"
-        label="Event Name:"
-        placeholder="Meeting name..."
-      />
+      <FormControl fullWidth>
+        <TextField
+          required
+          helperText={formErrors?.name ? formErrors?.name : ''}
+          error={formErrors?.name}
+          id="name"
+          name="name"
+          value={formValues.name}
+          label="Event Name:"
+          placeholder="Meeting name..."
+          onChange={handleInputChange}
+        />
+      </FormControl>
       <div className="event-form-row">
         <FormControl fullWidth>
           <InputLabel id="event-type-label">Event Type</InputLabel>
@@ -106,26 +113,37 @@ const EventForm = ({
         </FormControl>
       </div>
       <div className="event-form-row">
-        <TextField
-          id="Description"
-          label="Description"
-          variant="outlined"
-          name="description"
-          fullWidth
-          value={formValues.description}
-          onChange={handleInputChange}
-        />
+        <FormControl fullWidth>
+          <TextField
+            id="Description"
+            label="Description"
+            variant="outlined"
+            name="description"
+            fullWidth
+            value={formValues.description}
+            onChange={handleInputChange}
+          />
+        </FormControl>
       </div>
       <div className="event-form-row">
-        <TextField
-          id="Meeting URL"
-          label="Meeting URL"
-          variant="outlined"
-          name="videoConferenceLink"
-          fullWidth
-          value={formValues.videoConferenceLink}
-          onChange={handleInputChange}
-        />
+        <FormControl fullWidth>
+          <TextField
+            required
+            helperText={
+              formErrors?.videoConferenceLink
+                ? formErrors?.videoConferenceLink
+                : ''
+            }
+            error={formErrors?.videoConferenceLink}
+            id="Meeting URL"
+            label="Meeting URL"
+            variant="outlined"
+            name="videoConferenceLink"
+            fullWidth
+            value={formValues.videoConferenceLink}
+            onChange={handleInputChange}
+          />
+        </FormControl>
       </div>
 
       {children}
