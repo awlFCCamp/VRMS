@@ -46,7 +46,6 @@ const ManageProjects = () => {
   }, [EventsApiService]);
 
   const fetchRecurringEvents = useCallback(async () => {
-    console.log('fetchRecurringEvents');
     setEventsLoading(true);
     const eventsRes = await recurringEventsApiService.fetchRecurringEvents();
     setRecurringEvents(eventsRes);
