@@ -5,7 +5,7 @@ import { findNextOccuranceOfDay } from './utilities/findNextDayOccuranceOfDay';
 import { addDurationToTime } from './utilities/addDurationToTime';
 import { timeConvertFromForm } from './utilities/timeConvertFromForm';
 import validateEventForm from './utilities/validateEventForm';
-import EventForm from './eventForm/eventForm';
+import EventForm from './eventForm';
 
 const CreateNewEvent = ({
   projectToEdit,
