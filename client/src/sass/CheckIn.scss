@@ -64,6 +64,8 @@ label {
 
 // Following styles apply to all text fields including Material UI component <TextField>
 // Global styles help with UI consistency but can lead to style conflicts
+// Commented out styles that conflict with MUI component styling
+// See PR #1844
 
 input[type='text'],
 input[type='email'] {
