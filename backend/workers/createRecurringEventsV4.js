@@ -99,10 +99,6 @@ const filterAndCreateEvents = async (events, recurringEvents, URL, headerToSend,
  * @param {Date} eventDate - The event date to adjust.
  * @returns {Date} - The adjusted event date.
  */
-// const adjustToLocalTime = (eventDate) => {
-//   const localEventDate = new Date(eventDate.getTime() - eventDate.getTimezoneOffset() * 60000);
-//   return localEventDate;
-// };
 const adjustToLocalTime = (eventDate) => {
   const tempDate = new Date(eventDate);
   const offsetAtThatTime = tempDate.getTimezoneOffset();
@@ -148,6 +144,7 @@ const createRecurringEvents = (cron, fetch) => {
 };
 
 module.exports = {
+  createRecurringEvents,
   fetchData,
   isSameUTCDate,
   doesEventExist,
