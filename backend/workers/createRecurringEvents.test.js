@@ -1,68 +1,229 @@
-const { runTask } = require('./createRecurringEventsV3');
+const {
+  fetchData,
+  isSameUTCDate,
+  doesEventExist,
+  createEvent,
+  filterAndCreateEvents,
+  runTask,
+  scheduleTask,
+} = require('./createRecurringEventsV4');
 const MockDate = require('mockdate');
+const cron = require('node-cron');
 
-jest.mock('./createRecurringEventsV3', () => ({
-  runTask: jest.fn(),
+jest.mock('./lib/generateEventData', () => ({
+  generateEventData: jest.fn((event) => ({
+    ...event,
+    generated: true,
+  })),
 }));
 
-describe('Daylight Savings Time Transition Test', () => {
-  /**
-   * Tests the behavior during the Daylight Saving Time transition,
-   * ensuring the system handles the hour shift correctly.
-   */
-  test('Handles the DST transition day correctly - event already exists', async () => {
-    MockDate.set('2025-03-09T01:00:00Z'); // March 9, 1:00 AM UTC
+jest.mock('node-fetch', () => jest.fn());
+const fetch = require('node-fetch');
 
-    const mockEvents = [
-      { name: 'Existing Event', date: '2025-03-09T10:00:00Z' }, // March 9, 10:00 AM UTC
+describe('createRecurringEvents Module Tests', () => {
+  const mockURL = 'http://localhost:3000';
+  const mockHeader = 'mock-header';
+  let mockEvents;
+  let mockRecurringEvents;
+
+  beforeEach(() => {
+    MockDate.set('2023-11-02T00:00:00Z');
+
+    mockEvents = [
+      { name: 'Event 1', date: '2023-11-02T19:00:00Z' },
+      { name: 'Event 2', date: '2023-11-02T07:00:00Z' },
     ];
-    const mockRecurringEvents = [
-      { name: 'Recurring Event', date: '2025-03-09T10:00:00Z' }, // March 9, 10:00 AM UTC
+    mockRecurringEvents = [
+      { name: 'Event 1', date: '2023-11-02T19:00:00Z' },
+      { name: 'Event 2', date: '2023-11-02T07:00:00Z' },
+      { name: 'Event 3', date: '2023-11-03T07:00:00Z' }, // Does not match today
     ];
 
-    runTask.mockImplementationOnce(() => {
-      if (mockEvents.some((event) => event.date === mockRecurringEvents[0].date)) {
-        return [];
-      }
-      return mockRecurringEvents;
-    });
+    jest.clearAllMocks();
+  });
 
-    const result = await runTask();
-
-    const expectedOutput = [];
-    console.log('Expected Output:', expectedOutput);
-    console.log('Generated Output:', result);
-
-    expect(runTask).toHaveBeenCalled();
-    expect(result).toEqual(expectedOutput);
-
+  afterEach(() => {
+    jest.clearAllMocks();
     MockDate.reset();
   });
 
-  test('Handles the DST transition day correctly - new event created', async () => {
-    MockDate.set('2025-03-09T01:00:00Z'); // March 9, 1:00 AM UTC
+  describe('fetchData', () => {
+    it('should fetch data from the API endpoint', async () => {
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue(mockEvents),
+      });
 
-    const mockEvents = [];
-    const mockRecurringEvents = [
-      { name: 'Recurring Event', date: '2025-03-09T10:00:00Z' }, // March 9, 10:00 AM UTC
-    ];
+      const result = await fetchData('/api/events/', mockURL, mockHeader, fetch);
 
-    runTask.mockImplementationOnce(() => {
-      if (mockEvents.some((event) => event.date === mockRecurringEvents[0].date)) {
-        return [];
-      }
-      return mockRecurringEvents;
+      expect(fetch).toHaveBeenCalledWith(`${mockURL}/api/events/`, {
+        headers: { 'x-customrequired-header': mockHeader },
+      });
+      expect(result).toEqual(mockEvents);
     });
 
-    const result = await runTask();
+    it('should handle API fetch failures', async () => {
+      fetch.mockRejectedValueOnce(new Error('Network error'));
 
-    const expectedOutput = mockRecurringEvents;
-    console.log('Expected Output:', expectedOutput);
-    console.log('Generated Output:', result);
+      const result = await fetchData('/api/events/', mockURL, mockHeader, fetch);
 
-    expect(runTask).toHaveBeenCalled();
-    expect(result).toEqual(expectedOutput);
+      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(result).toEqual([]);
+    });
+  });
 
-    MockDate.reset();
+  describe('isSameUTCDate', () => {
+    it('should return true for the same UTC day', () => {
+      const date1 = new Date('2023-11-02T19:00:00Z');
+      const date2 = new Date('2023-11-02T10:00:00Z');
+      expect(isSameUTCDate(date1, date2)).toBe(true);
+    });
+
+    it('should return false for different UTC days', () => {
+      const date1 = new Date('2023-11-02T19:00:00Z');
+      const date2 = new Date('2023-11-03T10:00:00Z');
+      expect(isSameUTCDate(date1, date2)).toBe(false);
+    });
+  });
+
+  describe('doesEventExist', () => {
+    it('should return true if an event exists on the same UTC day', () => {
+      const today = new Date('2023-11-02T00:00:00Z');
+      expect(doesEventExist('Event 1', today, mockEvents)).toBe(true);
+    });
+
+    it('should return false if no event exists on the same UTC day', () => {
+      const today = new Date('2023-11-03T00:00:00Z');
+      expect(doesEventExist('Event 1', today, mockEvents)).toBe(false);
+    });
+  });
+
+  describe('createEvent', () => {
+    it('should create a new event via POST request', async () => {
+      const mockEvent = { name: 'Event 1', date: '2023-11-02T19:00:00Z' };
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue({ id: 1, ...mockEvent }),
+      });
+
+      const result = await createEvent(mockEvent, mockURL, mockHeader, fetch);
+
+      expect(fetch).toHaveBeenCalledWith(`${mockURL}/api/events/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-customrequired-header': mockHeader,
+        },
+        body: JSON.stringify(mockEvent),
+      });
+      expect(result).toEqual({ id: 1, ...mockEvent });
+    });
+
+    it('should return null if event creation fails', async () => {
+      fetch.mockRejectedValueOnce(new Error('Network error'));
+
+      const result = await createEvent(null, mockURL, mockHeader, fetch);
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('filterAndCreateEvents', () => {
+    it('should not create events already present for today', async () => {
+      await filterAndCreateEvents(mockEvents, mockRecurringEvents, mockURL, mockHeader, fetch);
+
+      const { generateEventData } = require('./lib/generateEventData');
+
+      expect(generateEventData).not.toHaveBeenCalledWith(mockRecurringEvents[0]); // Recurring Event 1
+      expect(generateEventData).not.toHaveBeenCalledWith(mockRecurringEvents[1]); // Recurring Event 2
+
+      expect(fetch).not.toHaveBeenCalled();
+    });
+
+    it('should handle daylight saving time transitions correctly', async () => {
+      // Mock the date to simulate being in PST on Nov 4, 2023, before DST ends
+      MockDate.set('2023-11-04T23:59:00Z'); // Just before DST ends (PST)
+
+      const dstMockRecurringEvents = [
+        { name: 'DST Event', date: '2023-11-05T02:00:00Z' }, // 2 AM UTC (Nov 4, 6 PM PST)
+      ];
+
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue({ id: 2, name: 'DST Event' }),
+      });
+
+      await filterAndCreateEvents([], dstMockRecurringEvents, mockURL, mockHeader, fetch);
+
+      const { generateEventData } = require('./lib/generateEventData');
+
+      expect(generateEventData).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'DST Event' }),
+      );
+
+      expect(fetch).toHaveBeenCalledWith(
+        `${mockURL}/api/events/`,
+        expect.objectContaining({
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-customrequired-header': mockHeader,
+          },
+          body: JSON.stringify({
+            name: 'DST Event',
+            date: '2023-11-05T02:00:00Z',
+            generated: true,
+          }),
+        }),
+      );
+
+      MockDate.reset();
+    });
+  });
+
+  describe('runTask', () => {
+    it('should fetch data but not create events if all exist', async () => {
+      // First API call response (events)
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue(mockEvents),
+      });
+
+      // Second API call response (recurring events)
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue(mockRecurringEvents),
+      });
+
+      await runTask(fetch, mockURL, mockHeader);
+
+      // Expect only 2 fetch calls (no event creation needed)
+      expect(fetch).toHaveBeenCalledTimes(2);
+
+      expect(fetch).toHaveBeenCalledWith(
+        `${mockURL}/api/recurringevents/`,
+        expect.objectContaining({ headers: { 'x-customrequired-header': mockHeader } }),
+      );
+
+      // Ensure no call to createEvent
+      expect(fetch).not.toHaveBeenCalledWith(
+        `${mockURL}/api/events/`,
+        expect.objectContaining({ method: 'POST' }),
+      );
+    });
+  });
+
+  describe('scheduleTask', () => {
+    it('should schedule the runTask function', () => {
+      const scheduleSpy = jest.spyOn(cron, 'schedule').mockImplementation((_, callback) => {
+        callback();
+      });
+
+      scheduleTask(cron, fetch, mockURL, mockHeader);
+
+      expect(scheduleSpy).toHaveBeenCalledWith('*/30 * * * *', expect.any(Function));
+
+      scheduleSpy.mockRestore();
+    });
   });
 });
