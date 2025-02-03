@@ -41,6 +41,7 @@ describe('createRecurringEvents Module Tests', () => {
 
     jest.clearAllMocks();
   });
+  fetch.mockClear();
 
   afterEach(() => {
     jest.clearAllMocks();
@@ -98,36 +99,6 @@ describe('createRecurringEvents Module Tests', () => {
     });
   });
 
-  describe('createEvent', () => {
-    it('should create a new event via POST request', async () => {
-      const mockEvent = { name: 'Event 1', date: '2023-11-02T19:00:00Z' };
-      fetch.mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValue({ id: 1, ...mockEvent }),
-      });
-
-      const result = await createEvent(mockEvent, mockURL, mockHeader, fetch);
-
-      expect(fetch).toHaveBeenCalledWith(`${mockURL}/api/events/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-customrequired-header': mockHeader,
-        },
-        body: JSON.stringify(mockEvent),
-      });
-      expect(result).toEqual({ id: 1, ...mockEvent });
-    });
-
-    it('should return null if event creation fails', async () => {
-      fetch.mockRejectedValueOnce(new Error('Network error'));
-
-      const result = await createEvent(null, mockURL, mockHeader, fetch);
-
-      expect(result).toBeNull();
-    });
-  });
-
   describe('filterAndCreateEvents', () => {
     it('should not create events already present for today', async () => {
       await filterAndCreateEvents(mockEvents, mockRecurringEvents, mockURL, mockHeader, fetch);
@@ -150,7 +121,7 @@ describe('createRecurringEvents Module Tests', () => {
 
       fetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValue({ id: 2, name: 'DST Event' }),
+        json: jest.fn().mockResolvedValue([{ id: 2, name: 'DST Event' }]),
       });
 
       await filterAndCreateEvents([], dstMockRecurringEvents, mockURL, mockHeader, fetch);
@@ -197,6 +168,7 @@ describe('createRecurringEvents Module Tests', () => {
 
       await runTask(fetch, mockURL, mockHeader);
 
+      console.log('Actual fetch calls:', fetch.mock.calls);
       // Expect only 2 fetch calls (no event creation needed)
       expect(fetch).toHaveBeenCalledTimes(2);
 
@@ -210,6 +182,36 @@ describe('createRecurringEvents Module Tests', () => {
         `${mockURL}/api/events/`,
         expect.objectContaining({ method: 'POST' }),
       );
+    });
+  });
+
+  describe('createEvent', () => {
+    it('should create a new event via POST request', async () => {
+      const mockEvent = { name: 'Event 1', date: '2023-11-02T19:00:00Z' };
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue({ id: 1, ...mockEvent }),
+      });
+
+      const result = await createEvent(mockEvent, mockURL, mockHeader, fetch);
+
+      expect(fetch).toHaveBeenCalledWith(`${mockURL}/api/events/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-customrequired-header': mockHeader,
+        },
+        body: JSON.stringify(mockEvent),
+      });
+      expect(result).toEqual({ id: 1, ...mockEvent });
+    });
+
+    it('should return null if event creation fails', async () => {
+      fetch.mockRejectedValueOnce(new Error('Network error'));
+
+      const result = await createEvent(null, mockURL, mockHeader, fetch);
+
+      expect(result).toBeNull();
     });
   });
 

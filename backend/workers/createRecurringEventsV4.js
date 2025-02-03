@@ -12,7 +12,7 @@ const fetchData = async (endpoint, URL, headerToSend, fetch) => {
     const res = await fetch(`${URL}${endpoint}`, {
       headers: { 'x-customrequired-header': headerToSend },
     });
-    if (!res.ok) throw new Error(`Failed to fetch: ${endpoint}`);
+    if (!res?.ok) throw new Error(`Failed to fetch: ${endpoint}`);
     return await res.json();
   } catch (error) {
     console.error(`Error fetching ${endpoint}:`, error);
@@ -115,8 +115,7 @@ const runTask = async (fetch, URL, headerToSend) => {
     fetchData('/api/events/', URL, headerToSend, fetch),
     fetchData('/api/recurringevents/', URL, headerToSend, fetch),
   ]);
-  console.log('events,', events);
-  console.log('recurringEvents,', recurringEvents);
+
   await filterAndCreateEvents(events, recurringEvents, URL, headerToSend, fetch);
   console.log("Today's events have been created.");
 };
