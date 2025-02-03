@@ -150,6 +150,45 @@ describe('createRecurringEvents Module Tests', () => {
 
       MockDate.reset();
     });
+
+    it('should correctly adjust timestamps created before a daylight savings transition', async () => {
+      // Simulate a timestamp from March (before DST starts)
+      MockDate.set('2024-03-10T07:00:00Z'); // This is before DST shift in the US
+
+      const dstMockRecurringEvents = [
+        { name: 'DST Event', date: '2024-03-10T19:00:00Z' }, // 7 PM GMT, should map to 7 PM PST (-8)
+      ];
+
+      // Reset mock date to current time after DST transition (November)
+      MockDate.set('2024-11-10T07:00:00Z'); // After DST shift (PST -7)
+
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue([]), // No existing events
+      });
+
+      await filterAndCreateEvents([], dstMockRecurringEvents, mockURL, mockHeader, fetch);
+
+      const { generateEventData } = require('./lib/generateEventData');
+
+      expect(generateEventData).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'DST Event' }),
+      );
+
+      expect(fetch).toHaveBeenCalledWith(`${mockURL}/api/events/`, {
+        method: 'POST',
+        // headers: {
+        //   'Content-Type': 'application/json',
+        //   'x-customrequired-header': mockHeader,
+        // },
+        body: JSON.stringify({
+          name: 'DST Event',
+          date: '2024-11-10T19:00:00Z', // Should match the correct hour in new DST period
+          generated: true,
+        }),
+      }),
+        MockDate.reset();
+    });
   });
 
   describe('runTask', () => {
