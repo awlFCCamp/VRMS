@@ -218,6 +218,48 @@ div.editable-field {
   background-color: white;
 }
 
+.event-form-box {
+  min-width: 100%;
+  min-height: 540px;
+  padding: 10px;
+  position: relative;
+  border: solid black 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background-color: white;
+
+  // Temporary solution until Globally applied CSS is refactored/removed
+
+  // Resets the label text size on EventForm.tsx Text Fields
+  // A global variable was interacting with MUI styles and overflowing the label on <TextField> in EventForm.tsx
+  .MuiInputLabel-root {
+    font-size: inherit;
+  }
+
+  // Forces horizontal padding inside EventForm.tsx Text Fields
+  // A global variable was interacting with MUI styles and affecting padding inside <TextField> in EventForm.tsx
+  .MuiInputBase-input {
+    padding-left: 15px !important;
+    padding-right: 15px !important;
+  }
+}
+
+.event-form-title {
+  font-size: 20px;
+}
+
+.event-form-row {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+}
+
+.event-form-error {
+  color: red;
+  margin-bottom: 10px;
+}
+
 .button-box {
   margin-top: 10px;
 }
@@ -244,7 +286,7 @@ div.editable-field {
 }
 
 .event-list-details {
- display: flex;
+  display: flex;
 }
 
 .edit-icon {

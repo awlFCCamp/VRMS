@@ -1,5 +1,5 @@
 import React from 'react';
-import { createClockHours } from '../../../utils/createClockHours';
+import { createClockHours } from '../../utils/createClockHours';
 import {
   Box,
   TextField,
@@ -8,7 +8,7 @@ import {
   FormControl,
   InputLabel,
 } from '@mui/material';
-import './EventForm.scss';
+import '../../sass/ManageProjects.scss';
 
 const EventForm = ({
   title,
