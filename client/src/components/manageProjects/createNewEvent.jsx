@@ -19,7 +19,7 @@ const CreateNewEvent = ({
     eventType: 'Team Meeting',
     description: '',
     videoConferenceLink: '',
-    day: new Date().getDay().toString(), // sets initial date value to user's current day in their local time
+    day: '0',
     startTime: '7:00pm',
     duration: '1',
   };

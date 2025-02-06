@@ -1,14 +1,12 @@
 import React from 'react';
 import { createClockHours } from '../../../utils/createClockHours';
 import {
+  Box,
   TextField,
   MenuItem,
   Select,
   FormControl,
-  Box,
-  Input,
   InputLabel,
-  FormHelperText,
 } from '@mui/material';
 import './EventForm.scss';
 
@@ -23,7 +21,7 @@ const EventForm = ({
   const clockHours = createClockHours();
 
   return (
-    <div className="event-form-box">
+    <Box className="event-form-box">
       {title && <h3 className="event-form-title">{title}</h3>}
       <FormControl fullWidth>
         <TextField
@@ -38,7 +36,7 @@ const EventForm = ({
           onChange={handleInputChange}
         />
       </FormControl>
-      <div className="event-form-row">
+      <Box className="event-form-row">
         <FormControl fullWidth>
           <InputLabel id="event-type-label">Event Type</InputLabel>
           <Select
@@ -71,8 +69,8 @@ const EventForm = ({
             <MenuItem value="6">Saturday</MenuItem>
           </Select>
         </FormControl>
-      </div>
-      <div className="event-form-row">
+      </Box>
+      <Box className="event-form-row">
         <FormControl fullWidth>
           <InputLabel id="start-time-label">Start Time</InputLabel>
           <Select
@@ -111,8 +109,8 @@ const EventForm = ({
             <MenuItem value="4">4</MenuItem>
           </Select>
         </FormControl>
-      </div>
-      <div className="event-form-row">
+      </Box>
+      <Box className="event-form-row">
         <FormControl fullWidth>
           <TextField
             id="Description"
@@ -124,8 +122,8 @@ const EventForm = ({
             onChange={handleInputChange}
           />
         </FormControl>
-      </div>
-      <div className="event-form-row">
+      </Box>
+      <Box className="event-form-row">
         <FormControl fullWidth>
           <TextField
             required
@@ -144,10 +142,10 @@ const EventForm = ({
             onChange={handleInputChange}
           />
         </FormControl>
-      </div>
+      </Box>
 
       {children}
-    </div>
+    </Box>
   );
 };
 
