@@ -23,7 +23,6 @@ const CreateNewEvent = ({
     startTime: '7:00pm',
     duration: '1',
   };
-
   const [formValues, setFormValues] = useState(initialFormValues);
   const [formErrors, setFormErrors] = useState({});
   const { showSnackbar } = useSnackbar();
@@ -83,7 +82,6 @@ const CreateNewEvent = ({
     }
     setFormErrors(errors);
   };
-
   return (
     <div>
       <button
