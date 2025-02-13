@@ -7,7 +7,7 @@ const {
   filterAndCreateEvents,
   runTask,
   scheduleTask,
-} = require('./createRecurringEventsV4');
+} = require('./createRecurringEvents');
 const { generateEventData } = require('./lib/generateEventData');
 
 const MockDate = require('mockdate');
