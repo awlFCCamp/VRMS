@@ -77,7 +77,7 @@ const createEvent = async (event, URL, headerToSend, fetch) => {
  *
  * Questions:
  *   Do we need to convert everything to Los Angeles time (PST/PDT)?
- *       See two implementations of adjustToLocalTime()
+ *       See two implementations of adjustToLosAngelesTime()
  *   Is there an appreciable different between event.date and event.startTime for recurring events?
  *       Not seeing any difference between the two using Postman to look
  *   Test suite (createRecurringEvents.test.js) might have some redundancy right now, but I think it
@@ -97,7 +97,7 @@ const filterAndCreateEvents = async (events, recurringEvents, URL, headerToSend,
   // filter recurring events for today and not already existing
   const eventsToCreate = recurringEvents.filter((recurringEvent) => {
     // we're converting the stored UTC event date to local time to compare the system DOW with the event DOW
-    const localEventDate = adjustToLocalTime(recurringEvent.date);
+    const localEventDate = adjustToLosAngelesTime(recurringEvent.date);
     return (
       localEventDate.getUTCDay() === todayUTCDay &&
       !doesEventExist(recurringEvent.name, today, events)
@@ -106,7 +106,7 @@ const filterAndCreateEvents = async (events, recurringEvents, URL, headerToSend,
 
   for (const event of eventsToCreate) {
     // convert to local time for DST correction...
-    const correctedStartTime = adjustToLocalTime(event.startTime);
+    const correctedStartTime = adjustToLosAngelesTime(event.startTime);
     const timeCorrectedEvent = {
       ...event,
       // ... then back to UTC for DB
@@ -121,27 +121,12 @@ const filterAndCreateEvents = async (events, recurringEvents, URL, headerToSend,
   }
 };
 
-// /**
-//  * Adjusts an event date to local time, accounting for DST offsets.
-//  * @param {Date} eventDate - The event date to adjust.
-//  * @returns {Date} - The adjusted event date.
-//  */
-// const adjustToLocalTime = (eventDate) => {
-//   // create new date from the stored UTC time
-//   const tempDate = new Date(eventDate);
-//   // get the offset of the local (server) time (or do I need to get the America/Los-Angeles offset at all times?)
-//   const offsetAtThatTime = tempDate.getTimezoneOffset();
-//   // get a new date with that offset
-//   const localEventDate = new Date(eventDate.getTime() - offsetAtThatTime * 60000);
-//   return localEventDate;
-// };
-
 /**
  * Adjusts an event date to Los_Angeles time, accounting for DST offsets.
  * @param {Date} eventDate - The event date to adjust.
  * @returns {Date} - The adjusted event date.
  */
-const adjustToLocalTime = (eventDate) => {
+const adjustToLosAngelesTime = (eventDate) => {
   const tempDate = new Date(eventDate);
   const losAngelesOffsetHours = new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/Los_Angeles',
@@ -193,7 +178,7 @@ const createRecurringEvents = (cron, fetch) => {
 module.exports = {
   createRecurringEvents,
   fetchData,
-  adjustToLocalTime,
+  adjustToLosAngelesTime,
   isSameUTCDate,
   doesEventExist,
   createEvent,

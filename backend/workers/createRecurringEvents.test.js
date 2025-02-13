@@ -1,6 +1,6 @@
 const {
   fetchData,
-  adjustToLocalTime,
+  adjustToLosAngelesTime,
   isSameUTCDate,
   doesEventExist,
   createEvent,
@@ -76,12 +76,12 @@ describe('createRecurringEvents Module Tests', () => {
     });
   });
 
-  describe('adjustToLocalTime', () => {
+  describe('adjustToLosAngelesTime', () => {
     it('should correctly adjust timestamps before DST starts (PST -8)', () => {
       const utcTimestamp = new Date('2024-03-10T07:00:00Z'); // 7 AM UTC
       const expectedLocal = new Date('2024-03-09T23:00:00Z'); // 11 PM PST (-8)
 
-      const result = adjustToLocalTime(utcTimestamp);
+      const result = adjustToLosAngelesTime(utcTimestamp);
 
       expect(result.toISOString()).toBe(expectedLocal.toISOString());
     });
@@ -90,7 +90,7 @@ describe('createRecurringEvents Module Tests', () => {
       const utcTimestamp = new Date('2024-03-11T07:00:00Z'); // 7 AM UTC (after DST)
       const expectedLocal = new Date('2024-03-11T00:00:00Z'); // 12 AM PDT (-7)
 
-      const result = adjustToLocalTime(utcTimestamp);
+      const result = adjustToLosAngelesTime(utcTimestamp);
 
       expect(result.toISOString()).toBe(expectedLocal.toISOString());
     });
@@ -99,7 +99,7 @@ describe('createRecurringEvents Module Tests', () => {
       const utcTimestamp = new Date('2024-11-10T08:00:00Z'); // 8 AM UTC
       const expectedLocal = new Date('2024-11-10T00:00:00Z'); // 12 AM PST (-8)
 
-      const result = adjustToLocalTime(utcTimestamp);
+      const result = adjustToLosAngelesTime(utcTimestamp);
 
       expect(result.toISOString()).toBe(expectedLocal.toISOString());
     });
@@ -108,7 +108,7 @@ describe('createRecurringEvents Module Tests', () => {
       const utcTimestamp = new Date('2024-03-11T09:00:00Z'); // 9 AM UTC
       const expectedLocal = new Date('2024-03-11T02:00:00Z'); // 2 AM PDT (UTC-7)
 
-      const result = adjustToLocalTime(utcTimestamp);
+      const result = adjustToLosAngelesTime(utcTimestamp);
 
       expect(result.toISOString()).toBe(expectedLocal.toISOString());
     });
@@ -117,7 +117,7 @@ describe('createRecurringEvents Module Tests', () => {
       const utcTimestamp = new Date('2024-11-03T09:00:00Z'); // 9 AM UTC
       const expectedLocal = new Date('2024-11-03T01:00:00Z'); // 1 AM PST (UTC-8)
 
-      const result = adjustToLocalTime(utcTimestamp);
+      const result = adjustToLosAngelesTime(utcTimestamp);
 
       expect(result.toISOString()).toBe(expectedLocal.toISOString());
     });
@@ -126,7 +126,7 @@ describe('createRecurringEvents Module Tests', () => {
       const utcTimestamp = new Date('2024-11-03T08:30:00Z'); // 8:30 AM UTC
       const expectedLocal = new Date('2024-11-03T01:30:00Z'); // 1:30 AM PST (during repeat hour)
 
-      const result = adjustToLocalTime(utcTimestamp);
+      const result = adjustToLosAngelesTime(utcTimestamp);
 
       expect(result.toISOString()).toBe(expectedLocal.toISOString());
     });
@@ -188,8 +188,6 @@ describe('createRecurringEvents Module Tests', () => {
         name: 'Pre-DST Event',
         date: new Date('2023-11-04T01:00:00Z').toISOString(), // Should match 1 AM PDT
         startTime: new Date('2023-11-04T01:00:00Z').toISOString(),
-        // hours: 1,
-        // endTime: new Date('2023-11-04T02:00:00Z').toISOString(),
         generated: true,
       };
 
@@ -224,8 +222,6 @@ describe('createRecurringEvents Module Tests', () => {
         name: 'DST Shift Event',
         date: new Date('2023-11-05T01:00:00Z').toISOString(),
         startTime: new Date('2023-11-05T01:00:00Z').toISOString(),
-        // hours: 1,
-        // endTime: new Date('2023-11-05T02:00:00Z').toISOString(),
         generated: true,
       };
 
@@ -247,7 +243,6 @@ describe('createRecurringEvents Module Tests', () => {
           name: 'Pre-DST Start Event',
           date: '2024-03-10T09:00:00Z', // 1 AM PST in UTC-8
           startTime: '2024-03-10T09:00:00Z',
-          // hours: 1,
         },
       ];
 
@@ -261,8 +256,6 @@ describe('createRecurringEvents Module Tests', () => {
         name: 'Pre-DST Start Event',
         date: new Date('2024-03-10T01:00:00Z').toISOString(), // Should match 1 AM PST
         startTime: new Date('2024-03-10T01:00:00Z').toISOString(),
-        // hours: 1,
-        // endTime: new Date('2024-03-10T02:00:00Z').toISOString(),
         generated: true,
       };
 
@@ -297,8 +290,6 @@ describe('createRecurringEvents Module Tests', () => {
         name: 'DST Start Event',
         date: new Date('2024-03-10T03:00:00Z').toISOString(), // Should match 3 AM PDT
         startTime: new Date('2024-03-10T03:00:00Z').toISOString(),
-        // hours: 1,
-        // endTime: new Date('2024-03-10T04:00:00Z').toISOString(),
         generated: true,
       };
 
