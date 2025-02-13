@@ -1,5 +1,6 @@
 const {
   fetchData,
+  adjustToLocalTime,
   isSameUTCDate,
   doesEventExist,
   createEvent,
@@ -7,6 +8,8 @@ const {
   runTask,
   scheduleTask,
 } = require('./createRecurringEventsV4');
+const { generateEventData } = require('./lib/generateEventData');
+
 const MockDate = require('mockdate');
 const cron = require('node-cron');
 
@@ -41,7 +44,7 @@ describe('createRecurringEvents Module Tests', () => {
 
     jest.clearAllMocks();
   });
-  fetch.mockClear();
+  // fetch.mockClear();
 
   afterEach(() => {
     jest.clearAllMocks();
@@ -70,6 +73,62 @@ describe('createRecurringEvents Module Tests', () => {
 
       expect(fetch).toHaveBeenCalledTimes(1);
       expect(result).toEqual([]);
+    });
+  });
+
+  describe('adjustToLocalTime', () => {
+    it('should correctly adjust timestamps before DST starts (PST -8)', () => {
+      const utcTimestamp = new Date('2024-03-10T07:00:00Z'); // 7 AM UTC
+      const expectedLocal = new Date('2024-03-09T23:00:00Z'); // 11 PM PST (-8)
+
+      const result = adjustToLocalTime(utcTimestamp);
+
+      expect(result.toISOString()).toBe(expectedLocal.toISOString());
+    });
+
+    it('should correctly adjust timestamps after DST starts (PDT -7)', () => {
+      const utcTimestamp = new Date('2024-03-11T07:00:00Z'); // 7 AM UTC (after DST)
+      const expectedLocal = new Date('2024-03-11T00:00:00Z'); // 12 AM PDT (-7)
+
+      const result = adjustToLocalTime(utcTimestamp);
+
+      expect(result.toISOString()).toBe(expectedLocal.toISOString());
+    });
+
+    it('should correctly adjust timestamps after DST ends (PST -8)', () => {
+      const utcTimestamp = new Date('2024-11-10T08:00:00Z'); // 8 AM UTC
+      const expectedLocal = new Date('2024-11-10T00:00:00Z'); // 12 AM PST (-8)
+
+      const result = adjustToLocalTime(utcTimestamp);
+
+      expect(result.toISOString()).toBe(expectedLocal.toISOString());
+    });
+
+    it('should correctly adjust timestamps when DST starts (PDT -7)', () => {
+      const utcTimestamp = new Date('2024-03-11T09:00:00Z'); // 9 AM UTC
+      const expectedLocal = new Date('2024-03-11T02:00:00Z'); // 2 AM PDT (UTC-7)
+
+      const result = adjustToLocalTime(utcTimestamp);
+
+      expect(result.toISOString()).toBe(expectedLocal.toISOString());
+    });
+
+    it('should correctly adjust timestamps when DST ends (PST -8)', () => {
+      const utcTimestamp = new Date('2024-11-03T09:00:00Z'); // 9 AM UTC
+      const expectedLocal = new Date('2024-11-03T01:00:00Z'); // 1 AM PST (UTC-8)
+
+      const result = adjustToLocalTime(utcTimestamp);
+
+      expect(result.toISOString()).toBe(expectedLocal.toISOString());
+    });
+
+    it('should correctly handle the repeated hour when DST ends (PST -8)', () => {
+      const utcTimestamp = new Date('2024-11-03T08:30:00Z'); // 8:30 AM UTC
+      const expectedLocal = new Date('2024-11-03T01:30:00Z'); // 1:30 AM PST (during repeat hour)
+
+      const result = adjustToLocalTime(utcTimestamp);
+
+      expect(result.toISOString()).toBe(expectedLocal.toISOString());
     });
   });
 
@@ -103,48 +162,150 @@ describe('createRecurringEvents Module Tests', () => {
     it('should not create events already present for today', async () => {
       await filterAndCreateEvents(mockEvents, mockRecurringEvents, mockURL, mockHeader, fetch);
 
-      const { generateEventData } = require('./lib/generateEventData');
-
       expect(generateEventData).not.toHaveBeenCalledWith(mockRecurringEvents[0]); // Recurring Event 1
       expect(generateEventData).not.toHaveBeenCalledWith(mockRecurringEvents[1]); // Recurring Event 2
-
       expect(fetch).not.toHaveBeenCalled();
     });
 
-    it('should handle daylight saving time transitions correctly', async () => {
-      // Mock the date to simulate being in PST on Nov 4, 2023, before DST ends
-      MockDate.set('2023-11-04T23:59:00Z'); // Just before DST ends (PST)
+    it('should correctly adjust an event before DST ends (UTC-7 -> UTC-8)', async () => {
+      MockDate.set('2023-11-04T23:00:00Z'); // Before DST ends
 
-      const dstMockRecurringEvents = [
-        { name: 'DST Event', date: '2023-11-05T02:00:00Z' }, // 2 AM UTC (Nov 4, 6 PM PST)
+      const preDstEvent = [
+        {
+          name: 'Pre-DST Event',
+          date: '2023-11-04T08:00:00Z', // 8 AM UTC (1 AM PDT)
+          startTime: '2023-11-04T08:00:00Z',
+          // hours: 1,
+        },
       ];
-
-      fetch.mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValue([{ id: 2, name: 'DST Event' }]),
-      });
-
-      await filterAndCreateEvents([], dstMockRecurringEvents, mockURL, mockHeader, fetch);
-
-      const { generateEventData } = require('./lib/generateEventData');
+      await filterAndCreateEvents([], preDstEvent, mockURL, mockHeader, fetch);
 
       expect(generateEventData).toHaveBeenCalledWith(
-        expect.objectContaining({ name: 'DST Event' }),
+        expect.objectContaining({ name: 'Pre-DST Event' }),
       );
+
+      const expectedEvent = {
+        name: 'Pre-DST Event',
+        date: new Date('2023-11-04T01:00:00Z').toISOString(), // Should match 1 AM PDT
+        startTime: new Date('2023-11-04T01:00:00Z').toISOString(),
+        // hours: 1,
+        // endTime: new Date('2023-11-04T02:00:00Z').toISOString(),
+        generated: true,
+      };
 
       expect(fetch).toHaveBeenCalledWith(
         `${mockURL}/api/events/`,
         expect.objectContaining({
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-customrequired-header': mockHeader,
-          },
-          body: JSON.stringify({
-            name: 'DST Event',
-            date: '2023-11-05T02:00:00Z',
-            generated: true,
-          }),
+          body: JSON.stringify(expectedEvent),
+        }),
+      );
+
+      MockDate.reset();
+    });
+
+    it('should correctly adjust an event during DST ending (PDT -> PST shift)', async () => {
+      MockDate.set('2023-11-05T02:00:00Z'); // The moment of DST shift
+
+      const dstTransitionEvent = [
+        {
+          name: 'DST Shift Event',
+          date: '2023-11-05T09:00:00Z',
+          startTime: '2023-11-05T09:00:00Z',
+          // hours: 1,
+        },
+      ];
+
+      await filterAndCreateEvents([], dstTransitionEvent, mockURL, mockHeader, fetch);
+
+      expect(generateEventData).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'DST Shift Event' }),
+      );
+      const expectedEvent = {
+        name: 'DST Shift Event',
+        date: new Date('2023-11-05T01:00:00Z').toISOString(),
+        startTime: new Date('2023-11-05T01:00:00Z').toISOString(),
+        // hours: 1,
+        // endTime: new Date('2023-11-05T02:00:00Z').toISOString(),
+        generated: true,
+      };
+
+      expect(fetch).toHaveBeenCalledWith(
+        `${mockURL}/api/events/`,
+        expect.objectContaining({
+          body: JSON.stringify(expectedEvent),
+        }),
+      );
+
+      MockDate.reset();
+    });
+
+    it('should correctly adjust an event before DST starts (UTC-8 -> UTC-7)', async () => {
+      MockDate.set('2024-03-10T09:00:00Z'); // 1 AM PST before the shift
+
+      const preDstStartEvent = [
+        {
+          name: 'Pre-DST Start Event',
+          date: '2024-03-10T09:00:00Z', // 1 AM PST in UTC-8
+          startTime: '2024-03-10T09:00:00Z',
+          // hours: 1,
+        },
+      ];
+
+      await filterAndCreateEvents([], preDstStartEvent, mockURL, mockHeader, fetch);
+
+      expect(generateEventData).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'Pre-DST Start Event' }),
+      );
+
+      const expectedEvent = {
+        name: 'Pre-DST Start Event',
+        date: new Date('2024-03-10T01:00:00Z').toISOString(), // Should match 1 AM PST
+        startTime: new Date('2024-03-10T01:00:00Z').toISOString(),
+        // hours: 1,
+        // endTime: new Date('2024-03-10T02:00:00Z').toISOString(),
+        generated: true,
+      };
+
+      expect(fetch).toHaveBeenCalledWith(
+        `${mockURL}/api/events/`,
+        expect.objectContaining({
+          body: JSON.stringify(expectedEvent),
+        }),
+      );
+
+      MockDate.reset();
+    });
+
+    it('should correctly adjust an event during DST start (PST -> PDT shift)', async () => {
+      MockDate.set('2024-03-10T10:00:00Z'); // 2 AM PST, which is skipped
+
+      const dstStartTransitionEvent = [
+        {
+          name: 'DST Start Event',
+          date: '2024-03-10T10:00:00Z', // 2 AM PST in UTC-8
+          startTime: '2024-03-10T10:00:00Z',
+          // hours: 1,
+        },
+      ];
+      await filterAndCreateEvents([], dstStartTransitionEvent, mockURL, mockHeader, fetch);
+
+      expect(generateEventData).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'DST Start Event' }),
+      );
+
+      const expectedEvent = {
+        name: 'DST Start Event',
+        date: new Date('2024-03-10T03:00:00Z').toISOString(), // Should match 3 AM PDT
+        startTime: new Date('2024-03-10T03:00:00Z').toISOString(),
+        // hours: 1,
+        // endTime: new Date('2024-03-10T04:00:00Z').toISOString(),
+        generated: true,
+      };
+
+      expect(fetch).toHaveBeenCalledWith(
+        `${mockURL}/api/events/`,
+        expect.objectContaining({
+          body: JSON.stringify(expectedEvent),
         }),
       );
 
