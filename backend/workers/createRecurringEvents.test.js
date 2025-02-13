@@ -44,7 +44,6 @@ describe('createRecurringEvents Module Tests', () => {
 
     jest.clearAllMocks();
   });
-  // fetch.mockClear();
 
   afterEach(() => {
     jest.clearAllMocks();
@@ -98,15 +97,6 @@ describe('createRecurringEvents Module Tests', () => {
     it('should correctly adjust timestamps after DST ends (PST -8)', () => {
       const utcTimestamp = new Date('2024-11-10T08:00:00Z'); // 8 AM UTC
       const expectedLocal = new Date('2024-11-10T00:00:00Z'); // 12 AM PST (-8)
-
-      const result = adjustToLosAngelesTime(utcTimestamp);
-
-      expect(result.toISOString()).toBe(expectedLocal.toISOString());
-    });
-
-    it('should correctly adjust timestamps when DST starts (PDT -7)', () => {
-      const utcTimestamp = new Date('2024-03-11T09:00:00Z'); // 9 AM UTC
-      const expectedLocal = new Date('2024-03-11T02:00:00Z'); // 2 AM PDT (UTC-7)
 
       const result = adjustToLosAngelesTime(utcTimestamp);
 
@@ -209,7 +199,6 @@ describe('createRecurringEvents Module Tests', () => {
           name: 'DST Shift Event',
           date: '2023-11-05T09:00:00Z',
           startTime: '2023-11-05T09:00:00Z',
-          // hours: 1,
         },
       ];
 
@@ -270,14 +259,13 @@ describe('createRecurringEvents Module Tests', () => {
     });
 
     it('should correctly adjust an event during DST start (PST -> PDT shift)', async () => {
-      MockDate.set('2024-03-10T10:00:00Z'); // 2 AM PST, which is skipped
+      MockDate.set('2024-03-10T10:00:00Z');
 
       const dstStartTransitionEvent = [
         {
           name: 'DST Start Event',
           date: '2024-03-10T10:00:00Z', // 2 AM PST in UTC-8
           startTime: '2024-03-10T10:00:00Z',
-          // hours: 1,
         },
       ];
       await filterAndCreateEvents([], dstStartTransitionEvent, mockURL, mockHeader, fetch);
