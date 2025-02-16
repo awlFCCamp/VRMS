@@ -12,6 +12,7 @@ import {
   FormControl,
   FormControlLabel,
   RadioGroup,
+  Paper,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
@@ -236,34 +237,26 @@ export default function ProjectForm({
       <Box sx={{ textAlign: 'center' }}>
         <Typography variant="h1">Project Management</Typography>
       </Box>
-      {auth.user.accessLevel === 'admin' ? (
-        <TitledBox
-          title={editMode ? 'Editing Project' : 'Project Information'}
-          badge={isEdit ? editIcon() : addIcon()}
-        />
-      ) : (
-        <TitledBox title={'Project Information'} />
-      )}
-      <form
-        id="project-form"
-        onSubmit={handleSubmit((data) => {
-          isEdit ? submitEditProject(data) : submitNewProject(data);
-        })}
+      <Paper
+        elevation={3}
+        sx={{ padding: 3, borderRadius: 1, backgroundColor: '#f5f5f5' }}
       >
-        {simpleInputs.map((input) => (
-          <ValidatedTextField
-            key={input.name}
-            register={register}
-            isEdit={isEdit}
-            editMode={editMode}
-            locationType={locationType}
-            locationRadios={locationRadios}
-            errors={errors}
-            input={input}
+        {auth.user.accessLevel === 'admin' ? (
+          <TitledBox
+            title={editMode ? 'Editing Project' : 'Project Information'}
+            badge={isEdit ? editIcon() : addIcon()}
           />
-        ))}
-        {isEdit &&
-          additionalInputsForEdit.map((input) => (
+        ) : (
+          <TitledBox title={'Project Information'} />
+        )}
+
+        <form
+          id="project-form"
+          onSubmit={handleSubmit((data) => {
+            isEdit ? submitEditProject(data) : submitNewProject(data);
+          })}
+        >
+          {simpleInputs.map((input) => (
             <ValidatedTextField
               key={input.name}
               register={register}
@@ -275,15 +268,29 @@ export default function ProjectForm({
               input={input}
             />
           ))}
-        <ChangesModal
-          open={isModalOpen}
-          onClose={handleClose}
-          destination={'/projects'}
-          aria-labelledby="modal-modal-title"
-          aria-describedby="modal-modal-description"
-          handleClose={handleClose}
-        />
-      </form>
+          {isEdit &&
+            additionalInputsForEdit.map((input) => (
+              <ValidatedTextField
+                key={input.name}
+                register={register}
+                isEdit={isEdit}
+                editMode={editMode}
+                locationType={locationType}
+                locationRadios={locationRadios}
+                errors={errors}
+                input={input}
+              />
+            ))}
+          <ChangesModal
+            open={isModalOpen}
+            onClose={handleClose}
+            destination={'/projects'}
+            aria-labelledby="modal-modal-title"
+            aria-describedby="modal-modal-description"
+            handleClose={handleClose}
+          />
+        </form>
+      </Paper>
       {auth.user.accessLevel === 'admin' ? (
         <Box>
           <Grid container justifyContent="space-evenly" sx={{ my: 3 }}>
